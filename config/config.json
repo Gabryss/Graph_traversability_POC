@@ -1,0 +1,32 @@
+{
+  "map": {
+    "width": 100,
+    "height": 100,
+    "generator": "cave" 
+  },
+  "perlin": {
+    "scale": 30.0,
+    "octaves": 3,
+    "seed": 0
+  },
+  "cave": {
+    "fill_probability": 0.45,
+    "birth_limit": 4,
+    "death_limit": 3,
+    "steps": 5
+  },
+  "graph": {
+    "neighbor_mode": "8",
+    "obstacle_threshold": 0.1
+  },
+  "path": {
+    "start": [0, 0],
+    "goal": [98,98]
+  },
+  "visualization": {
+    "sample_step": 4,
+    "output_path": "traversability_graph.png",
+    "show": false,
+    "plot_only_map": true
+  }
+}
