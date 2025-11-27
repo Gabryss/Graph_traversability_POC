@@ -18,4 +18,4 @@ docker run -it \
     --workdir /root \
     --name graph_traversability \
     local/graph_traversability:poc \
-    python3 src/graph_trav.py
+    python3 src/graph_build.py
