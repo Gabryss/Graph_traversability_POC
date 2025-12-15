@@ -17,16 +17,14 @@
   },
   "graph": {
     "neighbor_mode": "8",
-    "obstacle_threshold": 0.1
-  },
-  "path": {
-    "start": [0, 0],
-    "goal": [98,98]
+    "obstacle_threshold": 0.1,
+    "block_size": 2
   },
   "visualization": {
     "sample_step": 4,
-    "output_path": "traversability_graph.png",
-    "show": false,
-    "plot_only_map": true
+    "map_npy_path": "traversability_map.npy",
+    "output_path": "traversability_graph_test.png",
+    "graph_output_path": "traversability_graph_nodes_test123.png",
+    "show": false
   }
 }
