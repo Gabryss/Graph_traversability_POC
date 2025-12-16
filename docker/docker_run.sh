@@ -14,8 +14,9 @@ docker run -it \
     --env UID=$(id -u) \
     --env GID=$(id -g) \
     --volume="${PWD}/../src:/root/src" \
+    --volume="${PWD}/../data:/root/data" \
     --volume="${PWD}/../config:/root/config" \
     --workdir /root \
     --name graph_traversability \
     local/graph_traversability:poc \
-    python3 src/graph_build.py
+    python3 src/run_pipeline.py
