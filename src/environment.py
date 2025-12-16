@@ -8,7 +8,7 @@ Supports:
 - Perlin-based open terrain ("perlin")
 - Cave-like underground map using cellular automata ("cave")
 
-No graph / pathfinding logic here – just map generation + plotting.
+No graph / pathfinding logic here - just map generation + plotting.
 """
 
 import json
@@ -21,8 +21,9 @@ import matplotlib
 # Headless-friendly backend (Docker, no X server)
 matplotlib.use("Agg")
 
-import matplotlib.pyplot as plt
 from perlin_noise import PerlinNoise
+
+from visualization import TraversabilityVisualizer
 
 
 class EnvironmentGenerator:
@@ -89,55 +90,6 @@ class EnvironmentGenerator:
         self.traversability = trav
         return trav
 
-    def plot(
-        self,
-        save_path: Optional[Path] = None,
-        show: bool = False,
-        title_suffix: str = "",
-    ):
-        """
-        Plot the traversability map.
-
-        :param save_path: where to save the figure (PNG, etc.). If None,
-                          the figure is not saved.
-        :param show:      call plt.show() at the end (only works with GUI).
-        :param title_suffix: optional extra text for the figure title.
-        """
-        if self.traversability is None:
-            raise RuntimeError("Traversability map is not generated yet.")
-
-        fig, ax = plt.subplots(figsize=(6, 6))
-
-        im = ax.imshow(
-            self.traversability,
-            origin="lower",
-            cmap="viridis",
-            interpolation="nearest",
-            vmin=0.0,
-            vmax=1.0,
-        )
-        cbar = fig.colorbar(im, ax=ax)
-        cbar.set_label("Traversability (0 = rock, 1 = best)")
-
-        title = f"Traversability Map ({self.map_generator})"
-        if title_suffix:
-            title += f" - {title_suffix}"
-        ax.set_title(title)
-
-        ax.set_xlabel("x (cell)")
-        ax.set_ylabel("y (cell)")
-        plt.tight_layout()
-
-        if save_path is not None:
-            save_path = Path(save_path)
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-            plt.savefig(save_path, dpi=200)
-            print(f"[INFO] Saved figure to: {save_path}")
-
-        if show:
-            plt.show()
-        else:
-            plt.close(fig)
 
     # ------------------------------------------------------------------ #
     # 2) Perlin-based map
@@ -356,6 +308,7 @@ def main():
     width = int(map_cfg.get("width", 100))
     height = int(map_cfg.get("height", 100))
     map_generator = str(map_cfg.get("generator", "cave"))
+    use_existing = bool(map_cfg.get("use_existing", True))
 
     perlin_scale = float(perlin_cfg.get("scale", 30.0))
     perlin_octaves = int(perlin_cfg.get("octaves", 3))
@@ -365,31 +318,56 @@ def main():
     cave_birth_limit = int(cave_cfg.get("birth_limit", 4))
     cave_death_limit = int(cave_cfg.get("death_limit", 3))
     cave_steps = int(cave_cfg.get("steps", 5))
-    cave_min_trav = float(cave_cfg.get("min_traversability", 0.3))
+    cave_min_trav = float(cave_cfg.get("min_traversability", 0.3))  # keep default here
 
-    output_path_str = vis_cfg.get("output_path", "traversability_map.png")
+    map_npy_path_str = vis_cfg.get("map_npy_path", "data/traversability_map.npy")
+    env_output_path_str = vis_cfg.get("env_output_path", "data/traversability_map.png")
     show_flag = bool(vis_cfg.get("show", False))
 
-    # Save path is relative to the script's directory (src/)
-    script_dir = Path(__file__).resolve().parent
-    output_path = script_dir / output_path_str
+    project_root = Path(__file__).resolve().parents[1]
+    map_npy_path = project_root / map_npy_path_str
+    env_output_path = project_root / env_output_path_str
 
-    env = EnvironmentGenerator(
-        width=width,
-        height=height,
-        map_generator=map_generator,
-        perlin_scale=perlin_scale,
-        perlin_octaves=perlin_octaves,
-        perlin_seed=perlin_seed,
-        cave_fill_prob=cave_fill_prob,
-        cave_birth_limit=cave_birth_limit,
-        cave_death_limit=cave_death_limit,
-        cave_steps=cave_steps,
-        cave_min_traversability=cave_min_trav,
+    trav = None
+
+    # --- Load or generate ---
+    if use_existing and map_npy_path.exists():
+        print(f"[INFO] Using existing traversability map: {map_npy_path}")
+        trav = np.load(map_npy_path)
+    else:
+        if use_existing:
+            print(f"[WARN] map_npy_path not found, generating new map: {map_npy_path}")
+        else:
+            print(f"[INFO] Forced regeneration (use_existing=false).")
+
+        env = EnvironmentGenerator(
+            width=width,
+            height=height,
+            map_generator=map_generator,
+            perlin_scale=perlin_scale,
+            perlin_octaves=perlin_octaves,
+            perlin_seed=perlin_seed,
+            cave_fill_prob=cave_fill_prob,
+            cave_birth_limit=cave_birth_limit,
+            cave_death_limit=cave_death_limit,
+            cave_steps=cave_steps,
+            cave_min_traversability=cave_min_trav,
+        )
+        trav = env.generate_traversability_map()
+
+        map_npy_path.parent.mkdir(parents=True, exist_ok=True)
+        np.save(map_npy_path, trav)
+        print(f"[INFO] Saved traversability map to: {map_npy_path}")
+
+    # --- Always plot from trav (loaded or generated) ---
+    print(f"[INFO] Saving environment PNG to: {env_output_path.resolve()}")
+    viz = TraversabilityVisualizer()
+    viz.plot_traversability_map(
+        traversability=trav,
+        title=f"Traversability Map ({map_generator})",
+        save_path=env_output_path,
+        show=show_flag,
     )
-
-    env.generate_traversability_map()
-    env.plot(save_path=output_path, show=show_flag)
 
 
 if __name__ == "__main__":

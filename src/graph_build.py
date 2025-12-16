@@ -26,9 +26,9 @@ import matplotlib
 
 # Headless backend (Docker / no display)
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 from environment import EnvironmentGenerator, load_config
+from visualization import TraversabilityVisualizer
 
 
 class TraversabilityGraphBuilder:
@@ -228,102 +228,6 @@ class TraversabilityGraphBuilder:
                 err += dx
                 y0 += sy
 
-    # ------------------------------------------------------------------ #
-    # Visualization
-    # ------------------------------------------------------------------ #
-    def plot_nodes(
-        self,
-        save_path: Optional[Path] = None,
-        show: bool = False,
-        node_size: float = 20.0,
-        edge_alpha: float = 0.4,
-        edge_color: str = "white",
-        edge_width: float = 1.0,
-    ):
-        """
-        Plot traversability map with coarse nodes **and edges** overlaid.
-
-        Node color corresponds to node traversability.
-        Edges are drawn between centers of neighbouring nodes.
-        """
-        if self.traversability is None:
-            raise RuntimeError("Traversability map is not set.")
-        if self.graph is None:
-            raise RuntimeError("Graph not built. Call build_graph() first.")
-
-        trav = self.traversability
-
-        fig, ax = plt.subplots(figsize=(6, 6))
-
-        # --- Background: traversability map ---
-        im = ax.imshow(
-            trav,
-            origin="lower",
-            cmap="viridis",
-            interpolation="nearest",
-            vmin=0.0,
-            vmax=1.0,
-        )
-        cbar = fig.colorbar(im, ax=ax)
-        cbar.set_label("Traversability (0 = rock, 1 = best)")
-
-        # --- Draw edges ---
-        for (u, v) in self.graph.edges():
-            cx1, cy1 = self.graph.nodes[u]["center"]
-            cx2, cy2 = self.graph.nodes[v]["center"]
-
-            ax.plot(
-                [cx1, cx2],
-                [cy1, cy2],
-                color=edge_color,
-                linewidth=edge_width,
-                alpha=edge_alpha,
-                zorder=2,
-            )
-
-        # --- Draw nodes ---
-        xs = []
-        ys = []
-        colors = []
-        for _, data in self.graph.nodes(data=True):
-            cx, cy = data["center"]
-            xs.append(cx)
-            ys.append(cy)
-            colors.append(data["trav"])
-
-        sc = ax.scatter(
-            xs,
-            ys,
-            s=node_size,
-            c=colors,
-            cmap="plasma",
-            edgecolors="black",
-            linewidths=0.4,
-            alpha=0.95,
-            zorder=3,
-            vmin=0.0,
-            vmax=1.0,
-        )
-        cbar_nodes = fig.colorbar(sc, ax=ax)
-        cbar_nodes.set_label("Node avg traversability")
-
-        ax.set_title("Coarse Graph (nodes + edges)")
-        ax.set_xlabel("x (cell)")
-        ax.set_ylabel("y (cell)")
-        plt.tight_layout()
-
-        if save_path is not None:
-            save_path = Path(save_path)
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-            plt.savefig(save_path, dpi=200)
-            print(f"[INFO] Saved node+edge graph to: {save_path}")
-
-        if show:
-            plt.show()
-        else:
-            plt.close(fig)
-
-
 
 # ---------------------------------------------------------------------- #
 # Main: load config, load/reuse env map, build coarse graph, plot nodes
@@ -358,13 +262,18 @@ def main():
     graph_output_path_str = vis_cfg.get(
         "graph_output_path", "traversability_graph_nodes.png"
     )
+    graph_clusters_path_str = vis_cfg.get(
+        "graph_clusters_output_path", "traversability_graph_clusters.png"
+    )
+
     map_npy_path_str = vis_cfg.get("map_npy_path", "traversability_map.npy")
     show_flag = bool(vis_cfg.get("show", False))
 
-    # Paths are relative to src/
-    script_dir = Path(__file__).resolve().parent
-    graph_output_path = script_dir / graph_output_path_str
-    map_npy_path = script_dir / map_npy_path_str
+    # Paths are relative to root/
+    project_root = Path(__file__).resolve().parents[1]
+    graph_output_path = project_root / graph_output_path_str
+    graph_clusters_path = project_root / graph_clusters_path_str
+    map_npy_path = project_root / map_npy_path_str
 
     # 1) Load existing traversability map if available, otherwise regenerate
     if map_npy_path.exists():
@@ -390,7 +299,7 @@ def main():
         )
         trav = env.generate_traversability_map()
         map_npy_path_str = vis_cfg.get("map_npy_path", "traversability_map.npy")
-        map_npy_path = script_dir / map_npy_path_str
+        map_npy_path = project_root / map_npy_path_str
         np.save(map_npy_path, env.traversability)
         print(f"[INFO] Saved traversability map to: {map_npy_path}")
 
@@ -403,14 +312,23 @@ def main():
     )
     builder.build_graph()
 
-    # 3) Plot nodes overlay
-    builder.plot_nodes(
+    viz = TraversabilityVisualizer()
+    viz.plot_graph_overlay(
+        traversability=trav,
+        graph=builder.graph,
         save_path=graph_output_path,
         show=show_flag,
         node_size=10.0,
         edge_color="red",
         edge_width=1.0,
         edge_alpha=0.6,
+    )
+
+    viz.plot_graph_clusters(
+        traversability=trav,
+        graph=builder.graph,
+        save_path=graph_clusters_path,
+        show=show_flag,
     )
 
 
