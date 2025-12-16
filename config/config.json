@@ -1,8 +1,13 @@
 {
+  "pipeline": {
+    "run_environment": true,
+    "run_graph": true
+  },
   "map": {
     "width": 100,
     "height": 100,
-    "generator": "cave" 
+    "generator": "cave",
+    "use_existing": true
   },
   "perlin": {
     "scale": 30.0,
@@ -22,9 +27,10 @@
   },
   "visualization": {
     "sample_step": 4,
-    "map_npy_path": "traversability_map.npy",
-    "output_path": "traversability_graph_test.png",
-    "graph_output_path": "traversability_graph_nodes_test123.png",
+    "map_npy_path": "data/traversability_map.npy",
+    "env_output_path": "data/traversability_map.png",
+    "graph_output_path": "data/traversability_graph_nodes.png",
+    "graph_clusters_output_path": "data/traversability_graph_clusters.png",
     "show": false
   }
 }
