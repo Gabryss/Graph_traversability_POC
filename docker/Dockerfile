@@ -4,7 +4,7 @@ LABEL maintainer="Gabriel Garcia <gabriel.garcia@uni.lu>"
 
 
 RUN apt-get update && \
-    pip install --no-cache-dir perlin-noise networkx matplotlib numpy && \
+    pip install --no-cache-dir perlin-noise networkx matplotlib numpy pykdtree scipy && \
     rm -rf /var/lib/apt/lists/*
 
 #RUN apt update && \
