@@ -1,21 +1,22 @@
 {
   "pipeline": {
     "run_environment": true,
-    "run_graph": true
+    "run_graph": true,
+    "run_validation": true
   },
   "map": {
     "width": 100,
     "height": 100,
     "generator": "cave",
-    "use_existing": true
+    "use_existing": false
   },
   "perlin": {
     "scale": 30.0,
-    "octaves": 3,
-    "seed": 0
+    "octaves": 2,
+    "seed": 2
   },
   "cave": {
-    "fill_probability": 0.45,
+    "fill_probability": 0.42,
     "birth_limit": 4,
     "death_limit": 3,
     "steps": 5
@@ -32,5 +33,33 @@
     "graph_output_path": "data/traversability_graph_nodes.png",
     "graph_clusters_output_path": "data/traversability_graph_clusters.png",
     "show": false
+  },
+  "graph_build": {
+    "map_path": "data/traversability_map.npy",
+    "output_dir": "data",
+    "use_poisson_sampling": true,
+    "poisson_radius": 2.0,
+    "poisson_k": 300,
+    "poisson_bias": 1.0,
+    "use_cvt": false,
+    "cvt_iters": 15,
+    "cvt_sample_stride": 2,
+    "cvt_weight_power": 1.0,
+    "cvt_keep_in_free": true,
+    "use_skeleton_routing": false,
+    "skeleton_prune_spurs": false,
+    "spur_max_length": 10,
+    "max_snap_dist": 10.0,
+    "max_edge_length": 200.0,
+    "max_degree": 6,
+    "seed_stride": 4,
+    "knn_k": 8,
+    "save_debug_images": true
+},
+  "evaluation": {
+    "coverage_stride": 2,
+    "los_step": 1.0,
+    "obstacle_threshold": 0.0
   }
+
 }
