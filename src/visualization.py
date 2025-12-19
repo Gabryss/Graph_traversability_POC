@@ -260,3 +260,61 @@ class TraversabilityVisualizer:
         ax.set_ylabel("y (cell)")
 
         self._finalize_figure(fig, save_path, show)
+
+
+    def plot_graph_overlay_routed(
+        self,
+        traversability: np.ndarray,
+        nodes_xy: np.ndarray,
+        edges: List[Any],  # RoutedEdge-like: has u,v,weight,skel_path
+        skel_coords: np.ndarray,
+        title: str = "Organic Graph (routed edges)",
+        save_path: Optional[Path] = None,
+        show: bool = False,
+        figsize: Tuple[float, float] = (6, 6),
+        node_size: float = 28.0,
+        edge_alpha: float = 0.75,
+        edge_width: float = 1.6,
+    ) -> None:
+        fig, ax = plt.subplots(figsize=figsize)
+
+        im = ax.imshow(
+            traversability,
+            origin="lower",
+            cmap=self.map_cmap,
+            interpolation="nearest",
+            vmin=self.map_vmin,
+            vmax=self.map_vmax,
+        )
+        cbar = fig.colorbar(im, ax=ax)
+        cbar.set_label("Traversability (0 = rock, 1 = best)")
+
+        # Routed edges
+        for e in edges:
+            if isinstance(e, dict):
+                path = e.get("skel_path")
+            else:
+                path = getattr(e, "skel_path", None)
+            if path is None or len(path) < 2:
+                continue
+            pts = skel_coords[np.array(path, dtype=int)]
+            ax.plot(pts[:, 0], pts[:, 1], linewidth=edge_width, alpha=edge_alpha, zorder=2)
+
+        # Nodes (colored by local traversability)
+        H, W = traversability.shape
+        xs, ys, colors = [], [], []
+        for i, (x, y) in enumerate(nodes_xy):
+            xi = int(np.clip(round(float(x)), 0, W - 1))
+            yi = int(np.clip(round(float(y)), 0, H - 1))
+            xs.append(float(x)); ys.append(float(y))
+            colors.append(float(traversability[yi, xi]))
+
+        sc = ax.scatter(xs, ys, s=node_size, c=colors, cmap=self.node_cmap, zorder=3)
+        cbar2 = fig.colorbar(sc, ax=ax)
+        cbar2.set_label("Node traversability (sampled)")
+
+        ax.set_title(title)
+        ax.set_xlabel("x (cell)")
+        ax.set_ylabel("y (cell)")
+
+        self._finalize_figure(fig, save_path, show)
