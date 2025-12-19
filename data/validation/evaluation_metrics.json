@@ -1,0 +1,71 @@
+{
+  "basic": {
+    "map_shape": [
+      100,
+      100
+    ],
+    "num_nodes": 1025,
+    "num_edges": 2955,
+    "free_ratio": 0.4517
+  },
+  "nodes": {
+    "trav_mean": 0.48846041172895355,
+    "trav_min": 0.0,
+    "trav_p10_p50_p90": [
+      0.0,
+      0.6236765241950413,
+      0.713331755119545
+    ]
+  },
+  "graph": {
+    "num_components": 1,
+    "giant_component_ratio": 1.0,
+    "avg_degree": 5.765853658536585,
+    "degree_p10_p50_p90": [
+      5.0,
+      6.0,
+      6.0
+    ]
+  },
+  "edges": {
+    "euclid_len_mean": 3.0914196252654405,
+    "euclid_len_p10_p50_p90": [
+      2.09169086784515,
+      2.891385117079005,
+      4.327915217888933
+    ],
+    "weight_mean": 3.0914196252654405,
+    "weight_p10_p50_p90": [
+      2.09169086784515,
+      2.891385117079005,
+      4.327915217888933
+    ]
+  },
+  "spacing": {
+    "nn_dist_mean": 2.160041417499604,
+    "nn_dist_p10_p50_p90": [
+      2.01507784537684,
+      2.1002774319734727,
+      2.393676437296293
+    ]
+  },
+  "coverage": {
+    "mean_dist_to_node": 0.9478886471664497,
+    "p90_dist_to_node": 1.4326864198684028,
+    "stride": 2,
+    "num_sampled_free_points": 2259
+  },
+  "clearance": {
+    "node_clearance_p10_p50_p90": [
+      0.0,
+      1.0,
+      2.23606797749979
+    ],
+    "method": "scipy.distance_transform_edt"
+  },
+  "edge_validity": {
+    "valid_ratio": 0.5086294416243655,
+    "invalid_edges": 1452,
+    "checked_edges": 2955
+  }
+}
